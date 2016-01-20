@@ -11,6 +11,7 @@
 #----------------------------------------------------------------------------#
 
 import fileinput
+import math
 import re
 import sys     # argv, exit,
 import subprocess 
@@ -80,7 +81,8 @@ class Property(object):
 
     def update_property_list(self):
         '''
-        Update (create at 1st iteration) the file named with the property name.
+        Update (create at 1st iteration) the file named with the property 
+        name.
         '''
         if os.path.exists(self.name):
             with open(self.name, 'at') as f:
@@ -95,8 +97,27 @@ class Property(object):
     def target_function(self):
         targFunc = (float(self.value)/float(self.reference) - 1.0)**2
         return targFunc
-            
 
+    def target_function_special(self, *funcType):
+        '''
+        Used for properties whose target function needs special definition.
+        '''
+        value = float(self.value)
+        ref = float(self.reference)
+        
+        if funcType[0] == 'log':
+            targFunc = (math.log10(value)/math.log10(ref) - 1.0)**2
+        elif funcType[0] == 'scaled':
+            targFunc = (value/ref - 1.0)**2
+            targFunc = float(funcType[1]) * targFunc
+
+        else:
+            raise ValueError(("Function type '%s' not supported." 
+                              "Use 'log' or 'scaled'.") 
+                             % (funcType))
+        return targFunc
+
+  
 class ParameterSets(object):
 
     def __init__(self, paraTable='paraTable.dat'): 
@@ -155,8 +176,8 @@ class ParameterSets(object):
         def update_line_in_datafile(line, stringSet, valueSet):
             ''' 
             A method that update lines in the datafile template, with both the
-            parameter name set and value set given. Return the updated new line
-            line as a string.
+            parameter name set and value set given. Return the updated new 
+            line line as a string.
 
             stringSet: 
                 list that contains all possible strings that may occurred in
@@ -178,7 +199,7 @@ class ParameterSets(object):
                     pass
             return line
 
-        print "    Writting datafile: \"%s\" " % (dataFileOut)
+        print "    Datafile written: \"%s\" " % (dataFileOut)
 
         parameterStrings = map(str, parameterSet)
         with open(dataFileOut, 'wt') as fOut:
@@ -193,26 +214,31 @@ class ParameterSets(object):
 
 
 #-- main --------------------------------------------------------------------#
-  
+
+# simulation  
 path = './simulation'
 inFileName = 'in.2xlipid'
 lmp = 'lammps'
 
+# property
 totalProperties = '4'
 propertyName1 = ''
 propertyNames = []
 if propertyName1 == '':
     for i in range(int(totalProperties)):
         propertyNames.append("q_" + str(i+1))
-
 propertyRef1 = 70.0
-
 propertyRefList = [propertyRef1, 37.0, 220.0, 1.0]
+propertySpecial4 = 'scaled'
+property4SpecialArg = 100
+propertySpecialList = ['', '', '', [propertySpecial4, property4SpecialArg]]
 
+# parameters
 initParaTableFile = 'initParaTable.dat'
 paraTableFile = 'paraTable.dat'
 ffTemplate = 'forcefield.temp'
 
+# optimization
 optMethod = 'Nelder-Mead'
 
 #----------------------------------------------------------------------------#
@@ -244,7 +270,7 @@ def simulation_flow(parameters):
     newFile = paraSets.write_datafile(p, dataFile)
     
     print "\nRunning Simulation...:"
-    lipid.run(lmp)
+    #lipid.run(lmp)
     processedResult = lipid.post_process('preProcess.sh')
 
     print "\nPassing Properties To Optimization...:"
@@ -257,9 +283,14 @@ def simulation_flow(parameters):
                          % (totalProperties, len(propertyValues)))
     for i, propertyValue in enumerate(propertyValues):
         properties.append(Property(propertyValue, 
-                                   propertyRefList[i], propertyNames[i]))
+                                   propertyRefList[i], 
+                                   propertyNames[i]))
         properties[i].update_property_list()
-        targetValue += properties[i].target_function()
+        if not propertySpecialList[i]:
+            targetValue += properties[i].target_function()
+        else:
+            targetValue += properties[i].target_function_special(
+                               *propertySpecialList[i])
     print "    Current targeted value:", targetValue
     
     return targetValue
