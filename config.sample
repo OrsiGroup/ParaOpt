@@ -1,0 +1,46 @@
+; Sample configuration file for lipid parametrization.
+; The value of an option is assigned under each [section] it related to.
+
+[simulation]
+
+lmp = lammps  
+path = ./simulation
+inFileName = in.2xlipid
+aa = 
+
+[properties]
+
+totalProperties = 4
+
+; 1. area per lipid
+property1Name = 
+property1Ref = 70.0
+
+; 2. thinkness
+property2Name = 
+property2Ref = 37.0
+
+; 3. kA
+property3Name = 
+property3Ref = 220.0
+
+; 4. diffusion
+property4Name = 
+property4Ref = 10.0
+property4Special = log
+
+; 5. dipole
+;property5Name = 
+;property5Ref = 0.5
+;property5Special = scaled
+;property5SpecialArg = 100
+
+[parameters]
+
+initParaTableFile = initParaTable.dat
+paraTableFile = paraTable.dat
+ffTemplate = forcefield.temp
+
+[optimization]
+
+optMethod = Nelder-Mead

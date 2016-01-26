@@ -1,9 +1,10 @@
 #!/usr/bin/env python 
 #
-# Script:   opt.py
+#   opt.py
+#
 # Created:  2015/Jan/15
 # Purpose:  A generic routine to optimize CG-lipid parameters
-# Syntex:   opt.py inputFile
+# Syntex:   opt.py configureFile
 # Options:  
 # Example:
 # Notes:    Based on "framework-6.py" from Michalis
@@ -13,14 +14,11 @@
 import fileinput
 import math
 import re
-import sys     # argv, exit,
+import sys
 import subprocess 
 import os.path
 import scipy.optimize
-
-if not len(sys.argv) == 2:
-    print "Syntax: opt.py configureFile"
-    sys.exit()
+from src.configuration import Configuration
 
 #----------------------------------------------------------------------------#
 
@@ -213,39 +211,29 @@ class ParameterSets(object):
         return fOut
 
 
-#-- main --------------------------------------------------------------------#
-
-# simulation  
-path = './simulation'
-inFileName = 'in.2xlipid'
-lmp = 'lammps'
-
-# property
-totalProperties = '4'
-propertyName1 = ''
-propertyNames = []
-if propertyName1 == '':
-    for i in range(int(totalProperties)):
-        propertyNames.append("q_" + str(i+1))
-propertyRef1 = 70.0
-propertyRefList = [propertyRef1, 37.0, 220.0, 1.0]
-propertySpecial4 = 'scaled'
-property4SpecialArg = 100
-propertySpecialList = ['', '', '', [propertySpecial4, property4SpecialArg]]
-
-# parameters
-initParaTableFile = 'initParaTable.dat'
-paraTableFile = 'paraTable.dat'
-ffTemplate = 'forcefield.temp'
-
-# optimization
-optMethod = 'Nelder-Mead'
-
 #----------------------------------------------------------------------------#
 
+if len(sys.argv) == 2:
+    confFile = sys.argv[1]
+elif len(sys.argv) == 1:
+    confFile = 'config.sample'
+else:
+    print "Syntax: opt.py configureFile"
+    sys.exit()
+
 print "\nPreparations...:"
-print "    Parsing input settings from \"%s\"..." % ('TODO')
-## TODO: add a class to deal with input settings from an input file. 
+cfg = Configuration()
+cfg.read(confFile)
+
+lmp, path, inFileName = cfg.get_config('simulation')
+propertyNames, propertyRefs, propertySpecials = cfg.get_config('properties')
+initParaTableFile, paraTableFile, ffTemplate = cfg.get_config('parameters')
+optMethod = cfg.get_config('optimization')
+
+print lmp, path, inFileName
+print propertyNames, propertyRefs, propertySpecials
+print initParaTableFile, paraTableFile, ffTemplate
+print optMethod
 
 print "    Fetch initial parameters from \"%s\"" % (initParaTableFile)
 initParaSets = ParameterSets(initParaTableFile)
@@ -256,8 +244,10 @@ subprocess.call("head -1 %s > %s" % (initParaTableFile, paraTableFile),
 
 def simulation_flow(parameters):
     ''' 
-    Receive the optimized parameters (float list), and return the targeted 
-    function value (float)
+    A set of parameters is passed in, and a targeted function value is returned.
+
+    type_parameters: float list 
+    rtype: float
     '''
     print "\n#---------------#"
     lipid = Simulation(path, inFileName)
@@ -266,11 +256,10 @@ def simulation_flow(parameters):
     paraSets = ParameterSets(paraTableFile)
     paraSets.update_table(parameters)
     p = paraSets.get_parameter()
-    dataFile = 'forcefield.DOPC'
-    newFile = paraSets.write_datafile(p, dataFile)
+    newFile = paraSets.write_datafile(p, ffTemplate)
     
     print "\nRunning Simulation...:"
-    #lipid.run(lmp)
+    lipid.run(lmp)
     processedResult = lipid.post_process('preProcess.sh')
 
     print "\nPassing Properties To Optimization...:"
@@ -283,17 +272,18 @@ def simulation_flow(parameters):
                          % (totalProperties, len(propertyValues)))
     for i, propertyValue in enumerate(propertyValues):
         properties.append(Property(propertyValue, 
-                                   propertyRefList[i], 
+                                   propertyRefs[i], 
                                    propertyNames[i]))
         properties[i].update_property_list()
-        if not propertySpecialList[i]:
+        if not propertySpecials[i]:
             targetValue += properties[i].target_function()
         else:
             targetValue += properties[i].target_function_special(
-                               *propertySpecialList[i])
+                               *propertySpecials[i])
     print "    Current targeted value:", targetValue
     
     return targetValue
+
 
 print "\nOptimizing...:"
 
