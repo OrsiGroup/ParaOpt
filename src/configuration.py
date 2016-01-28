@@ -19,7 +19,7 @@ class Configuration(cp):
     #TODO maybe no need to be global
 
     def read(self, confFile):
-        print "    Parsing input configurations from \"%s\"..." % (confFile)
+        print "    Reading input configurations from \"%s\"..." % (confFile)
         super(Configuration, self).read(confFile)
  
         if not set(self.sections()) == set(sectionSet):
@@ -32,17 +32,20 @@ class Configuration(cp):
         type_section: str
         rtype: list
         '''
+        # "LOWER CASE" if adding new words!
         optionsRequired = {'optimization': ['optmethod',
                                            ], 
                            'properties': ['totalproperties',
                                          ],
                            'parameters': ['initparatablefile', 
                                           'paratablefile', 
+                                          'ffforsimulation',
                                           'fftemplate', 
                                          ], 
                            'simulation': ['lmp','path','infilename'
                                          ],
-                          }  
+                          }
+
         optionsRequired = optionsRequired[section]
         setRead = set(self.options(section))
         if set(optionsRequired).issubset(setRead): 
@@ -66,23 +69,11 @@ class Configuration(cp):
                         special = [self.get(
                                    section, suffix + 'special')]
                     else:
-                        special = ['']
+                        special = ''
                     if self.has_option(section, suffix + 'specialArg'):
                         special.append(self.getfloat(
                                        section, suffix + 'specialArg'))
                     propertySpecials.append(special)
-                values = [propertyNames, propertyRefs, propertySpecials]
+                values = [totalProperties, propertyNames, propertyRefs, propertySpecials]
          
         return values
-
-
-
-
-
-
-
-
-
-
-
-

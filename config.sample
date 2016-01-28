@@ -39,6 +39,7 @@ property4Special = log
 
 initParaTableFile = initParaTable.dat
 paraTableFile = paraTable.dat
+ffForSimulation = forcefield.DOPC
 ffTemplate = forcefield.temp
 
 [optimization]
