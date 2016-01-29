@@ -20,7 +20,7 @@ import time
 import os.path
 import scipy.optimize
 from src.configuration import Configuration
-from src.parameter import ParameterSets
+from src.parameter import ParameterTable
 
 #----------------------------------------------------------------------------#
 
@@ -69,6 +69,7 @@ class Simulation(object):
         print "    Current properties:", result
         return result
 
+    # TODO def back_up_simulation_files(self, anyFilesName, destination):
 
 class Property(object):
 
@@ -157,12 +158,15 @@ cfg.read(confFile)
     optMethod
 ] = cfg.get_config('optimization')
 
-print "    Fetch initial parameters from \"%s\"." % (initParaTableFile)
-paraSetInitial = ParameterSets(initParaTableFile)
-paraInitials = paraSetInitial.get_parameter()
+print "    Fetch initial parameters from \"%s\"." %(
+           initParaTableFile)
+paraTableInitial = ParameterTable(initParaTableFile)
+paraValuesInitial = paraTableInitial.current_parameter()
 
-print "    Parameters will be saved in \"%s\"." % (paraTableFile)
-subprocess.call("head -1 %s > %s" % (initParaTableFile, paraTableFile), 
+print "    Parameters will be saved in \"%s\" during simulation." %(
+           paraTableFile)
+subprocess.call("head -1 %s > %s" %(
+                 initParaTableFile, paraTableFile), 
                 shell=True)
 
 for i, name in enumerate(propertyNames):
@@ -176,7 +180,6 @@ for i, name in enumerate(propertyNames):
         subprocess.call("mv %s '%s'" % (name, nameBackUpTo), shell=True)
         print "    Backup %s to %s." %(name, nameBackUpTo)
 
-
 def simulation_flow(parameters):
     ''' A set of parameters is passed in, and a targeted function value is
     returned.
@@ -184,18 +187,16 @@ def simulation_flow(parameters):
     type_parameters: float list 
     rtype: float
     '''
-    print "\n#---------------#"
-    lipid = Simulation(path, inFileName)
+    paraTable = ParameterTable(paraTableFile)
+    paraTable.update_table(parameters)
+    print "\n#---- Step %d -------------#\n" %(paraTable.len)
+    p = paraTable.current_parameter()
+    paraTable.write_datafile(p, ffForSimulation, ffTemplate)
 
-    print "Passing Parameters To Simulation...:"
-    paraSets = ParameterSets(paraTableFile)
-    paraSets.update_table(parameters)
-    p = paraSets.get_parameter()
-    newFile = paraSets.write_datafile(p, ffForSimulation, ffTemplate)
-    
     print "\nRunning Simulation...:"
-    lipid.run(lmp)
-    processedResult = lipid.post_process('preProcess.sh')
+    simulation = Simulation(path, inFileName)
+    simulation.run(lmp)
+    processedResult = simulation.post_process('preProcess.sh')
     #processedResult = "70.8745 29.7267241379 1005.19 1.146949"
 
     print "\nPassing Properties To Optimization...:"
@@ -204,8 +205,9 @@ def simulation_flow(parameters):
     
     propertyValues = processedResult.split()
     if not len(propertyValues) == int(totalProperties):
-        raise ValueError('%s properties indicated, but %d detected.' 
-                         % (totalProperties, len(propertyValues)))
+        raise ValueError('%s properties indicated, but %d detected.' %(
+                          totalProperties, len(propertyValues))
+                        )
     for i, propertyValue in enumerate(propertyValues):
         properties.append(Property(propertyValue, 
                                    propertyRefs[i], 
@@ -220,10 +222,10 @@ def simulation_flow(parameters):
     
     return targetValue
 
-#simulation_flow(paraInitials)
+#simulation_flow(paraValuesInitial)
 print "\nOptimizing...:"
 optParaValues=scipy.optimize.minimize(simulation_flow, 
-                                      paraInitials, 
+                                      paraValuesInitial,
                                       method=optMethod, 
                                       options={'disp':True, 
                                                'maxiter':100, 
