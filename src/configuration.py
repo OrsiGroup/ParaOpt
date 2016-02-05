@@ -19,7 +19,7 @@ class Configuration(cp):
     #TODO maybe no need to be global
 
     def read(self, confFile):
-        print "    Reading input configurations from \"%s\"..." % (confFile)
+        print "Reading input configurations from \"%s\"..." % (confFile)
         super(Configuration, self).read(confFile)
  
         if not set(self.sections()) == set(sectionSet):

@@ -32,7 +32,7 @@ class ParameterTable(object):
         '''
         parameterStrings = self.paraLines[-1].split()
         parameters = map(float, parameterStrings)
-        print "    Current parameters:", parameterStrings
+        print "Current parameters:", parameterStrings
         return parameters
 
     def update_table(self, paraList):
@@ -92,7 +92,7 @@ class ParameterTable(object):
                 # E.g. something in the comments.
             return line
 
-        print "    Parameters written to: \"%s\" " % (dataFileOut)
+        print "Parameters written to: \"%s\" " % (dataFileOut)
         parameterStrings = map(str, paraList)
         with open(dataFileOut, 'wt') as fOut:
             fTemplate = open(dataFileTemp, 'rt')
