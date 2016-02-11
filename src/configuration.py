@@ -5,75 +5,96 @@
 # Purpose:  Read and process setting from a configuration file. 
 # Notes:    
 #
-#----------------------------------------------------------------------------#
+# -------------------------------------------------------------------------- #
 
 from configparser import ConfigParser as cp
-from configparser import NoOptionError
+# from configparser import NoOptionError
 
-#----------------------------------------------------------------------------#
 
-class Configuration(cp): 
+# -------------------------------------------------------------------------- #
 
-    global sectionSet
-    sectionSet = ['simulation', 'properties', 'parameters', 'optimization']
-    #TODO maybe no need to be global
+class Configuration(cp):
+
+    # A dict containing all mandatory options.
+    # "LOWER CASE" if adding new words!
+    _optionsDict = {
+        'optimization': ['optmethod',
+                         ],
+        'properties': ['totalproperties',
+                       ],
+        'parameters': ['initparatablefile',
+                       'paratablefile',
+                       'ffforsimulation',
+                       'fftemplate',
+                       ],
+        'simulation': ['lmp',
+                       'path',
+                       'infilename',
+                       ],
+    }
 
     def read(self, confFile):
-        print "Reading input configurations from \"%s\"..." % (confFile)
+        """ Based on configparser.ConfigParser.read().
+
+        t_confFile: str
+        rtype: None
+        """
         super(Configuration, self).read(confFile)
- 
-        if not set(self.sections()) == set(sectionSet):
-            raise ValueError("Incorrect section format.")
+
+        print "Reading input configurations from \"%s\"..." % confFile
+        if set(self.sections()) != set(self._optionsDict.keys()):
+            raise ValueError("Incorrect section in %s." % confFile)
 
     def get_config(self, section):
-        '''
-        Get required configurations for the "section".
+        """
+        Get required configurations for each "section".
 
         type_section: str
         rtype: list
-        '''
-        # "LOWER CASE" if adding new words!
-        optionsRequired = {'optimization': ['optmethod',
-                                           ], 
-                           'properties': ['totalproperties',
-                                         ],
-                           'parameters': ['initparatablefile', 
-                                          'paratablefile', 
-                                          'ffforsimulation',
-                                          'fftemplate', 
-                                         ], 
-                           'simulation': ['lmp','path','infilename'
-                                         ],
-                          }
+        """
+        optionsRequired = self._optionsDict[section]
+        optionsRead = self.options(section)
+        if not set(optionsRequired).issubset(set(optionsRead)):
+            raise ValueError(
+                "Option \"%s\" (mandatory) not found." % (
+                    (set(optionsRequired) - set(optionsRead)).pop()
+                )
+            )
+        configs = [self.get(section, option) for option in optionsRequired]
+        # TODO Unicode matters?
+        # configs = map(str, configs)
 
-        optionsRequired = optionsRequired[section]
-        setRead = set(self.options(section))
-        if set(optionsRequired).issubset(setRead): 
-            values = [self.get(section, option) for option in optionsRequired]
-            #TODO Unicode matters?
-            #values = map(str, values)  
+        if section == 'properties':
+            return self._get_config_for_property(configs)
+        else:
+            return configs
 
-            if section =='properties':
-                totalProperties = int(values[0])
-                suffixes = ['property' + str(i+1) 
-                            for i in range(totalProperties)]
-                propertyNames = []
-                propertyRefs = []
-                propertySpecials = [] 
-                for suffix in suffixes:
-                    propertyNames.append(self.get(
-                                         section, suffix + 'name'))
-                    propertyRefs.append(self.getfloat(
-                                        section, suffix + 'ref'))
-                    if self.has_option(section, suffix + 'special'):
-                        special = [self.get(
-                                   section, suffix + 'special')]
-                    else:
-                        special = ''
-                    if self.has_option(section, suffix + 'specialArg'):
-                        special.append(self.getfloat(
-                                       section, suffix + 'specialArg'))
-                    propertySpecials.append(special)
-                values = [totalProperties, propertyNames, propertyRefs, propertySpecials]
-         
-        return values
+    def _get_config_for_property(self, configGot):
+        """ Special parsing for the 'properties' section.
+
+        type_configGot: list
+        rtype: list
+        """
+        SECTION = 'properties'
+
+        totalProperties = int(configGot[0])
+        propertyNames = []
+        propertyRefs = []
+        propertySpecials = []
+
+        suffixes = ['property' + str(i) for i in range(1, totalProperties+1)]
+        for suffix in suffixes:
+            propertyNames.append(self.get(SECTION, suffix + 'name'))
+            propertyRefs.append(self.getfloat(SECTION, suffix + 'ref'))
+
+            if self.has_option(SECTION, suffix + 'special'):
+                specialType = self.get(SECTION, suffix + 'special')
+                special = [specialType]  # It's a list!
+                if self.has_option(SECTION, suffix + 'specialArg'):
+                    specialArg = self.getfloat(SECTION, suffix + 'specialArg')
+                    special.append(specialArg)
+            else:
+                special = ''
+            propertySpecials.append(special)
+
+        return [totalProperties, propertyNames, propertyRefs, propertySpecials]
