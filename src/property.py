@@ -7,6 +7,8 @@
 #
 # -------------------------------------------------------------------------- #
 
+from __future__ import print_function
+
 import math
 import os.path
 import subprocess
@@ -29,7 +31,7 @@ class Property(object):
             now = time.strftime("%Y-%m-%d-%H-%M-%S")
             backUpTo = ''.join([fileName, '#', now])
             subprocess.call("mv %s '%s'" % (fileName, backUpTo), shell=True)
-            print "Backup existing %s to %s." % (fileName, backUpTo)
+            print("Backup existing %s to %s." % (fileName, backUpTo))
 
         if os.path.exists(self.name):
             back_up(self.name)

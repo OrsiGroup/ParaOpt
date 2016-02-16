@@ -7,6 +7,8 @@
 #
 # -------------------------------------------------------------------------- #
 
+from __future__ import print_function
+
 import re
 
 
@@ -31,8 +33,8 @@ class ParameterTable(object):
         rtype: float list
         """
         parameterStr = self.paraLines[-1].split()
-        parameterList = map(float, parameterStr)
-        print "Current parameters:", parameterStr
+        parameterList = [float(pStr) for pStr in parameterStr]
+        print("Current parameters:", parameterStr)
         return parameterList
 
     def update_table(self, paraList):
@@ -97,8 +99,8 @@ class ParameterTable(object):
                 # e.g. something in the comments.
             return line
 
-        print "Parameters written to: \"%s\" " % dataFileOut
-        parameterStrings = map(str, paraList)
+        print("Parameters written to: \"%s\" " % dataFileOut)
+        parameterStrings = [str(paraList) for p in paraList]
         with open(dataFileOut, 'wt') as fOut:
             fTemplate = open(dataFileTemp, 'rt')
             for line in fTemplate:

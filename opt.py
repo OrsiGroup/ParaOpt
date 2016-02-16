@@ -11,6 +11,8 @@
 #
 #  ------------------------------------------------------------------------- #
 
+from __future__ import print_function
+
 import subprocess
 import sys
 import scipy.optimize
@@ -34,19 +36,19 @@ if len(sys.argv) == 2:
 elif len(sys.argv) == 1:
     confFile = 'config.sample'
 else:
-    print "Syntax: opt.py configureFile"
+    print("Syntax: opt.py configureFile")
     sys.exit()
 
 
 # Preparations
-print WELCOME_INFO
+print(WELCOME_INFO)
 cfg = Configuration()
 cfg.read(confFile)
 
 (
     optMethod,
 ) = cfg.get_config('optimization')
-print "The \"%s\" optimizing method will be used.\n" % optMethod
+print("The \"%s\" optimizing method will be used.\n" % optMethod)
 
 (
     initParaTableFile,
@@ -54,10 +56,10 @@ print "The \"%s\" optimizing method will be used.\n" % optMethod
     ffForSimulation,
     ffTemplate,
 ) = cfg.get_config('parameters')
-print "Fetch initial parameters from \"%s\"." % initParaTableFile
+print("Fetch initial parameters from \"%s\"." % initParaTableFile)
 paraTableInitial = ParameterTable(initParaTableFile)
 paraValuesInitial = paraTableInitial.current_parameter()
-print "Optimized parameters will be saved in \"%s\".\n" % paraTableFile
+print("Optimized parameters will be saved in \"%s\".\n" % paraTableFile)
 subprocess.call(
     "head -1 %s > %s" % (initParaTableFile, paraTableFile),
     shell=True
@@ -70,7 +72,7 @@ paraTable = ParameterTable(paraTableFile)
     path,
     inFileName,
 ) = cfg.get_config('simulation')
-print "Simulation will be performed in folder: %s.\n" % path
+print("Simulation will be performed in folder: %s.\n" % path)
 
 
 (
@@ -89,7 +91,7 @@ properties = [''] * len(propertyNames)
 for i, name in enumerate(propertyNames):
     if not name:
         name = "q_" + str(i + 1)
-        print "Property%d name not set, Reset as \"%s\"." % (i + 1, name)
+        print("Property%d name not set, Reset as \"%s\"." % (i + 1, name))
     properties[i] = Property(name)
     properties[i].reference = propertyRefs[i]
     properties[i].special = propertySpecials[i]
@@ -106,14 +108,14 @@ def simulation_flow(parameters):
     rtype: float
     """
     paraTable.update_table(parameters)
-    print "\n#---- Step %d -------------#\n" % paraTable.len
+    print("\n#---- Step %d -------------#\n" % paraTable.len)
     paraTable.write_datafile(
         paraTable.current_parameter(),
         dataFileOut=ffForSimulation,
         dataFileTemp=ffTemplate,
     )
 
-    print "\nRunning Simulation...:"
+    print("\nRunning Simulation...:")
     simulation = Simulation(path, inFileName)
     simulation.run(lmp)
 
@@ -121,7 +123,7 @@ def simulation_flow(parameters):
     # TODO add configure option postProcessFile
     # propertyValues= ['70.8745', '29.7267', '1005.19', '1.146']
 
-    print "Saving Property Values..."
+    print("Saving Property Values...")
     if not len(propertyValues) == int(totalProperties):
         raise ValueError(
             '%s target properties needed, but %d produced by simulation.' % (
@@ -132,14 +134,14 @@ def simulation_flow(parameters):
         p.value = propertyValues[_]
         p.update_property_list()
 
-    print "\nCalculating Target Value...:"
+    print("\nCalculating Target Value...:")
     targetValue = sum([p.target_function() for p in properties])
-    print "Current targeted value:", targetValue
+    print("Current targeted value:", targetValue)
 
     return targetValue
 
 
-print "\nOptimizing...:"
+print("\nOptimizing...:")
 optParaValues = scipy.optimize.minimize(
     simulation_flow,
     paraValuesInitial,

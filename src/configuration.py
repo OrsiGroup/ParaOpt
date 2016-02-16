@@ -7,6 +7,8 @@
 #
 # -------------------------------------------------------------------------- #
 
+from __future__ import print_function
+
 from configparser import ConfigParser as cp
 # from configparser import NoOptionError
 
@@ -41,7 +43,7 @@ class Configuration(cp):
         """
         super(Configuration, self).read(confFile)
 
-        print "Reading input configurations from \"%s\"..." % confFile
+        print("Reading input configurations from \"%s\"..." % confFile)
         if set(self.sections()) != set(self._optionsDict.keys()):
             raise ValueError("Incorrect section in %s." % confFile)
 

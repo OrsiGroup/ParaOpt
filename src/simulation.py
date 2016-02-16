@@ -7,6 +7,8 @@
 #
 # -------------------------------------------------------------------------- #
 
+from __future__ import print_function
+
 import fileinput
 import os.path
 import subprocess
@@ -34,6 +36,7 @@ class Simulation(object):
                 self.path, thread, lmpExe, self.infile
             ),
             shell=True,
+            # TODO Dangerous!
         )
 
     def post_process(self, scriptFileName):
@@ -49,14 +52,14 @@ class Simulation(object):
         type_scriptFileName: str
         rtype: str list
         """
-        print "Results being processed by: \"%s\" " % scriptFileName
+        print("Results being processed by: \"%s\" " % scriptFileName)
         subprocess.check_call(
             'cd %s && ./%s' % (self.path, scriptFileName),
             shell=True,
         )
         resFile = fileinput.FileInput(os.path.join(self.path, 'res.postprocess'))
         result = resFile.readline()
-        print "Current properties:", result
+        print("Current properties:", result)
         return result.split()
 
         # TODO def back_up_simulation_files(self, anyFilesName, destination):
