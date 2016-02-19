@@ -71,6 +71,7 @@ paraTable = ParameterTable(paraTableFile)
     lmp,
     path,
     inFileName,
+    processScript,
 ) = cfg.get_config('simulation')
 print("Simulation will be performed in folder: %s.\n" % path)
 
@@ -118,9 +119,9 @@ def simulation_flow(parameters):
     print("\nRunning Simulation...:")
     simulation = Simulation(path, inFileName)
     simulation.run(lmp)
+    # TODO add config "Nthread" to control mpirun thread number.
 
-    propertyValues = simulation.post_process('preProcess.sh')
-    # TODO add configure option postProcessFile
+    propertyValues = simulation.post_process(processScript)
     # propertyValues= ['70.8745', '29.7267', '1005.19', '1.146']
 
     print("Saving Property Values...")

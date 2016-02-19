@@ -32,6 +32,7 @@ class Configuration(cp):
         'simulation': ['lmp',
                        'path',
                        'infilename',
+                       'processscript'
                        ],
     }
 
