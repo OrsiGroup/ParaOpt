@@ -68,31 +68,31 @@ class ParameterTable(object):
         rtype: None
         """
 
-        def update_line(line, stringSet, valueSet):
+        def update_line(line, stringList, valueList):
             """ Update a line (line) in the datafile template, with both the
-            para-name set (stringSet) and value set (valueSet) given. Return
-            the updated new line as a string.
+            para-name list (stringList) and value list (valueList) given. 
+            Return the updated new line as a string.
 
             line:
                 A line read from the datafile template;
-            stringSet:
+            stringList:
                 A list that contains all possible strings that may occurred
                 in the line;
-            valueSet:
+            valueList:
                 A list that contains all corresponding values that we want
                 to replace the strings.
 
             type_line: str
-            type_stringSet: str list
-            type_valueSet: str list
+            type_stringList: str list
+            type_valueList: str list
             rtype: str
             """
             pattern = re.compile(r'@\w+\b')
             paraNamesFoundInLine = pattern.findall(line)
             for paraName in paraNamesFoundInLine:
                 try:
-                    index = stringSet.index(paraName[1:])
-                    line = line.replace(paraName, valueSet[index])
+                    index = stringList.index(paraName[1:])
+                    line = line.replace(paraName, valueList[index])
                 except ValueError:
                     pass
                 # omit strings starting with "@" but not found in stringSet,
@@ -100,7 +100,7 @@ class ParameterTable(object):
             return line
 
         print("Parameters written to: \"%s\" " % dataFileOut)
-        parameterStrings = [str(paraList) for p in paraList]
+        parameterStrings = [str(p) for p in paraList]
         with open(dataFileOut, 'wt') as fOut:
             fTemplate = open(dataFileTemp, 'rt')
             for line in fTemplate:
