@@ -22,7 +22,7 @@ one line, separated by blank space, in a file named "res.postprocess" under
 your simulation path.
 
 For example, it can be a shell script like:
-'''bash
+```bash
 
 q1=$(SOME_COMMANDS_TO_OBTAIN_PROPERTY1)
 q2=$(SOME_COMMANDS_TO_OBTAIN_PROPERTY2)
@@ -30,5 +30,4 @@ q3=$(SOME_COMMANDS_TO_OBTAIN_PROPERTY3)
 q4=$(SOME_COMMANDS_TO_OBTAIN_PROPERTY4)
 
 echo ${q1} ${q2} ${q3} ${q4} > res.postprocess
-'''
-
+```
