@@ -6,7 +6,12 @@ A python optimizer for developing molecular simulation forcefield.
 
 ## Installation
 
-### 
+To perform a package dependencies check and install missing ones on your machine (recommended):
+    $ python setup.py -?
+To perform a package dependencies check and only list missing ones:
+    $ python setup.py -?
+To build ParaOpt as a shared package so that you can call its functions from other python scripts:
+    $ python setup.py -?
 
 ## Usage
 
