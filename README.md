@@ -8,93 +8,111 @@ A python optimizer for developing molecular simulation forcefield
 
 ## Usage
 
-An input text file is needed to configure all stuffs related to the optimizing
-process. You also need your own post-processing script to extract the values of
-the properties you chose as the optimization target.
+To use this code, an input text file is needed to configure all stuffs to
+control the optimizing process. You also need your own post-processing script
+to extract the values of the properties you chose as the optimization target.
+
+To run:
+
+    $ opt.py YOUR_CONFIG_FILE
 
 ### Configurations
 
-The input configuration file is organized in the standard .INI file format. 
-All options are grouped in four sections: simulation, properties, parameters, 
-and optimization. See [config.sample] as a example to create your config file.
+The input configuration file is organized in the standard .INI file format,
+which is also similar to the .mdp format in Gromacs. All options are grouped
+in four sections: simulation, properties, parameters, and optimization.
+See [config.sample] as a example to create your config file, and below is a  
+brief explanation for options in each section.
 
-#### [ simulation ]
+#### Simulation
+```Ini
+[ simulation ]
 
-**`lmp`**: the LAMMPS executable called to run your simulation.
-**`path`**: the path under which you run your simulation, relative to the
-current executing directory.
-**`inFileName`**: your LAMMPS input file.
-**`processScript`**: your post-process script to obtain targeted property values.
+lmp = The LAMMPS executable called to run your simulation.
+path = The path under which you run your simulation, relative to the current executing directory.
+inFileName = Your LAMMPS input file.
+processScript = A script to post-process your simulation output to obtain targeted property values.
+```
+**Note:** the values of options "`inFileName`" and "`processScript`" indicate a
+relative path to the value of option "`path`". E.g., "`inFileName = in.lammps`"
+points to the input file under the simulation folder, and "`processScript = 
+../process.sh`" points to a script file in the parent directory.
 
-**Note:** the value of "inFileName" and "processScript" indicate a relative 
-path to the "path" value. E.g., "inFileName = in.lammps" points to the input 
-file under the simulation folder, and `"processScript = ../process.sh"` points
-to a script file in the parent directory.
+#### Optimization
+```Ini
+[ optimization ]
 
-#### [ optimization ]
+optMethod = The optimization algorithm. 
+```
+**Note:** the value of "`optMethod`" could be one of the following:
+ - "`Nelder-Mead`"
 
-**`optMethod`**: the optimization algorithm, which could be one of the
-following:
- - "Nelder-Mead"
+#### Properties
+```Ini
+[ properties ]
 
-#### [ properties ]
+totalProperties = The number of targeted properties, which should match the output by your post-processing script.
+propertyNName = The name you use to identify the Nth targeted property.
+propertyNRef = The reference value for the Nth property.
+propertyNSpecial = the special handling for the target-function of the Nth property. ;(optional)
+propertyNSpecialArg = The argument for the special handling, which is only useful when "propertyNSpecial = scaled". ;(optional)
+```
+**Note:** If "`totalProperties = M`", in total M bunches of "`propertyN*`"
+options should be given, where N = 1, 2, ..., M. 
+"`propertyNName`" can be left blank, and if so, it will be aotumatically 
+assigned as "q_N".
+The value of "`propertyNSpecial`" could be one of the following, and then 
+"`propertyNSpecialArg`" is only useful for value "`scaled`", indicating the 
+scaling coefficient:
+ - "`log`": calculate the target-function for the logarithmized value;
+ - "`scaled`": calculate the scaled target-function.
 
-**`totalProperties`**: the number of targeted properties, which should match
-the output by your post-processing script.
-**`propertyNName`**: the name of the Nth property, which could be left blank
-and will be aotumatically assigned as "q_N".
-**`propertyNRef`**: the reference value for the Nth property.
-**`propertyNSpecial`**: (optional) the special handling for the target-function
-of the Nth property, the value of which could be one of the following:
- - `"log"`: calcualte the target-function for the logarithmized value;
- - `"scaled"`: calculate the scaled target-function.
-**`propertyNSpecialArg`**: (optional) the argument for the special handling,
-which could be a number when "propertyNSpecial = scaled", indicating the scaling 
-coefficient.
+ #### Parameters
+```Ini
+[ parameters ]
 
-**Note:** If `"totalProperties = M"`, in total M bunches of `"propertyN*"`
-options should be given, where N = 1, 2, ..., M
-
-#### [ parameters ]
-
-**`initParaTableFile`**: a tabulated file listing the initial parameter values, in 
-which only two lines are contained like the example below; the 1st line
-starts with "#" and lists the parameter names (or tags, symbols), and the 2nd
-line lists the corresponding values.
-```bash
+initParaTableFile = A tabulated text file you prepared, listing the initial values of the forcefield parameters to be optimized (see below the further explanation about the required format).
+paraTableFile = The tabulated file that will be generated during every optimizing step, saving the output parameter values. 
+ffTemplate = A template of the forcefield file you prepared for running the simulation (see rules below).
+ffForSimulation = The forcefield file that will be read for your simulation, written based on the "ffTemplate".
+```
+The "`initParaTableFile`" should contain only 2 lines. The 1st line starts 
+with "#" and then lists the parameter "names" (or tags, symbols), and the 2nd
+line lists the corresponding values from which you start the optimization. 
+Now assume you have such a set of parameters to optimize:
+```
 # epsilon_1 sigma_1 epsilon_2 sigma_2 epsilon_3 sigma_3
 0.1 10 0.2 20 0.3 30
 ```
-**`paraTableFile`**: a tabulated file that the parameter values generated by every 
-optimizing interation will be written into; it will contain the same columns as
-"initParaTableFile" and N+2 rows after N interation steps.
-**`ffTemplate`**: the forcefield template file prepared for the simulation; the 
-parameter names (1st line in "paraTableFile")are contained in the correct 
-place in this template file; before each iteration, the parameter values 
-optimized from the last interation are filled in the correct locations 
-accordingly, to generate a forcefield file ("ffForSimulation") read by the 
-simulation; still taking the example "initParaTableFile" above, and assuming 
-you have a template forcefield file like this:
+The parameter names are important because they are used in the "`ffTemplate`" 
+so that the code finds the correct positions in the template and replace them 
+with corresponding numbers every iteration and runs the simulation. Your template 
+forcefield file looks like this:
 ```bash
 pair_coeff    1    1	  @epsilon_1 @sigma_1
 pair_coeff    1    2	  @epsilon_2 @sigma_2 
 pair_coeff    1    3	  @epsilon_3 @sigma_3 
 ```
-a real forcefield file for the simulation in the 1st step will be:
+Note the "`@`" placeholder that indicates here should be replaced. Then when 
+the codes runs, a real force field file ("`ffForSimulation`") for the simulation 
+in the 1st step will be generated:
 ```bash
 pair_coeff    1    1	  0.1 10 
 pair_coeff    1    2	  0.2 20 
 pair_coeff    1    3	  0.3 30 
 ```
-**`ffForSimulation`**: See above.
+Then after each step, the freshly optimized parameter values are saved into 
+"`paraTableFile`" -- thus, it will contain the same columns as "initParaTableFile" 
+and N+2 rows after N iteration steps -- and the "`ffForSimulation`" are updated
 
 **Note:** all files identified in this section imply a path relative to the 
-executing directory.
+executing directory, or a absolute path is, of course, also accepted.
+
 
 ### Post-processing script
 
 You can use whatever script you like to post-process your data. The only 
-requirement is that the final numbers of all target property should be saved in
+requirement is: the final numbers of all target property should be saved in
 one line, separated by blank space, in a file named "`res.postprocess`" under 
 your simulation path.
 
