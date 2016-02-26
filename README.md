@@ -21,7 +21,7 @@ To run:
 The input configuration file is organized in the standard .INI file format,
 which is also similar to the .mdp format in Gromacs. All options are grouped
 in four sections: simulation, properties, parameters, and optimization.
-See [config.sample] as a example to create your config file, and below is a  
+See [config.sample] as a example to create your config file, and below is a 
 brief explanation for options in each section.
 
 #### Simulation
@@ -29,9 +29,11 @@ brief explanation for options in each section.
 [ simulation ]
 
 lmp = The LAMMPS executable called to run your simulation.
-path = The path under which you run your simulation, relative to the current executing directory.
+path = The path under which you run your simulation, relative to the 
+                current executing directory.
 inFileName = Your LAMMPS input file.
-processScript = A script to post-process your simulation output to obtain targeted property values.
+processScript = A script to post-process your simulation output to obtain 
+                targeted property values.
 ```
 **Note:** the values of options "`inFileName`" and "`processScript`" indicate a
 relative path to the value of option "`path`". E.g., "`inFileName = in.lammps`"
@@ -51,15 +53,18 @@ optMethod = The optimization algorithm.
 ```Ini
 [ properties ]
 
-totalProperties = The number of targeted properties, which should match the output by your post-processing script.
+totalProperties = The number of targeted properties, which should match the
+                  output by your post-processing script.
 propertyNName = The name you use to identify the Nth targeted property.
 propertyNRef = The reference value for the Nth property.
-propertyNSpecial = the special handling for the target-function of the Nth property. ;(optional)
-propertyNSpecialArg = The argument for the special handling, which is only useful when "propertyNSpecial = scaled". ;(optional)
+propertyNSpecial  = The special handling for the target-function of the Nth 
+                    property. ;(optional)
+propertyNSpecialArg = The argument for the special handling, which is only 
+                      useful when "propertyNSpecial = scaled". ;(optional)
 ```
 **Note:** If "`totalProperties = M`", in total M bunches of "`propertyN*`"
 options should be given, where N = 1, 2, ..., M. 
-"`propertyNName`" can be left blank, and if so, it will be aotumatically 
+"`propertyNName`" can be left blank, and if so, it will be automatically 
 assigned as "q_N".
 The value of "`propertyNSpecial`" could be one of the following, and then 
 "`propertyNSpecialArg`" is only useful for value "`scaled`", indicating the 
@@ -67,46 +72,53 @@ scaling coefficient:
  - "`log`": calculate the target-function for the logarithmized value;
  - "`scaled`": calculate the scaled target-function.
 
- #### Parameters
+#### Parameters
 ```Ini
 [ parameters ]
 
-initParaTableFile = A tabulated text file you prepared, listing the initial values of the forcefield parameters to be optimized (see below the further explanation about the required format).
-paraTableFile = The tabulated file that will be generated during every optimizing step, saving the output parameter values. 
-ffTemplate = A template of the forcefield file you prepared for running the simulation (see rules below).
-ffForSimulation = The forcefield file that will be read for your simulation, written based on the "ffTemplate".
+initParaTableFile = A tabulated text file you prepared, listing the initial 
+                    values of the forcefield parameters to be optimized (see 
+                    below for further explanation about the required format).
+paraTableFile = The tabulated file that will be generated during every 
+                optimizing step, saving the output parameter values. 
+ffTemplate = A template of the forcefield file you prepared for running the 
+             simulation (see rules below).
+ffForSimulation = The forcefield file that will be read for your simulation, 
+                  written based on the "ffTemplate".
 ```
 The "`initParaTableFile`" should contain only 2 lines. The 1st line starts 
-with "#" and then lists the parameter "names" (or tags, symbols), and the 2nd
-line lists the corresponding values from which you start the optimization. 
-Now assume you have such a set of parameters to optimize:
+with "`#`" and then lists the parameter "names" (or "tags"), and the 2nd
+line lists the corresponding values from which you want to start the 
+optimization. Now assume you have such a set of parameters to optimize:
 ```
 # epsilon_1 sigma_1 epsilon_2 sigma_2 epsilon_3 sigma_3
 0.1 10 0.2 20 0.3 30
 ```
 The parameter names are important because they are used in the "`ffTemplate`" 
 so that the code finds the correct positions in the template and replace them 
-with corresponding numbers every iteration and runs the simulation. Your template 
-forcefield file looks like this:
+with corresponding numbers and runs the simulation. Your template forcefield 
+file looks something like this:
 ```bash
 pair_coeff    1    1	  @epsilon_1 @sigma_1
 pair_coeff    1    2	  @epsilon_2 @sigma_2 
 pair_coeff    1    3	  @epsilon_3 @sigma_3 
 ```
-Note the "`@`" placeholder that indicates here should be replaced. Then when 
-the codes runs, a real force field file ("`ffForSimulation`") for the simulation 
-in the 1st step will be generated:
+Note the "`@`" placeholder that indicates here the following string should be 
+replaced, and the code tries to match it from the "`initParaTableFile`" (1st 
+step) or "`paraTableFile`". So, a real force field file ("`ffForSimulation`") 
+you would expect to be generated in the 1st step will be:
 ```bash
 pair_coeff    1    1	  0.1 10 
 pair_coeff    1    2	  0.2 20 
 pair_coeff    1    3	  0.3 30 
 ```
 Then after each step, the freshly optimized parameter values are saved into 
-"`paraTableFile`" -- thus, it will contain the same columns as "initParaTableFile" 
-and N+2 rows after N iteration steps -- and the "`ffForSimulation`" are updated
+"`paraTableFile`" --thus, it will contain the same number of columns as 
+"initParaTableFile" and N+2 rows after N iteration steps -- and the 
+"`ffForSimulation`" are updated.
 
 **Note:** all files identified in this section imply a path relative to the 
-executing directory, or a absolute path is, of course, also accepted.
+executing directory, or an absolute path is  also accepted.
 
 
 ### Post-processing script
