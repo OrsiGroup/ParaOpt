@@ -27,27 +27,23 @@ processScript = preProcess.sh
 totalProperties = 4
 
 ; 1. area per lipid
-property1Name = 
+property1Name = A_l 
 property1Ref = 70.0
 
 ; 2. thinkness
 property2Name = 
 property2Ref = 37.0
 
-; 3. kA
-property3Name = 
-property3Ref = 220.0
-
 ; 4. diffusion
-property4Name = 
-property4Ref = 10.0
-property4Special = log
+property3Name = 
+property3Ref = 10.0
+property3Special = log
 
 ; 5. dipole
-;property5Name = 
-;property5Ref = 0.5
-;property5Special = scaled
-;property5SpecialArg = 100
+property4Name = 
+property4Ref = 0.5
+property4Special = scaled
+property4SpecialArg = 100
 
 
 [parameters]
