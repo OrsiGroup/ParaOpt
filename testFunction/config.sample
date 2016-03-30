@@ -11,10 +11,10 @@
 ; to the "path" option. E.g., "processScript = ../process.sh" points to a 
 ; script file in the parent folder of the "path" directory. 
 
-lmp = lammps  
-path = ./simulation
-inFileName = in.2xlipid
-processScript = preProcess.sh 
+lmp = test
+path = 
+inFileName = 
+processScript =  
 
 
 [properties]
@@ -26,28 +26,21 @@ processScript = preProcess.sh
 
 totalProperties = 4
 
-; 1. area per lipid
-property1Name = 
-property1Ref = 70.0
+; 1. y1
+property1Name =  
+property1Ref = 0.997
 
-; 2. thinkness
+; 2. y2
 property2Name = 
-property2Ref = 37.0
+property2Ref = 71.73
 
-; 3. kA
+; 3. y3
 property3Name = 
-property3Ref = 220.0
+property3Ref = 45.3
 
-; 4. diffusion
+; 4. y4
 property4Name = 
-property4Ref = 10.0
-property4Special = log
-
-; 5. dipole
-;property5Name = 
-;property5Ref = 0.5
-;property5Special = scaled
-;property5SpecialArg = 100
+property4Ref = 2.3
 
 
 [parameters]
@@ -57,8 +50,8 @@ property4Special = log
   
 initParaTableFile = initParaTable.dat
 paraTableFile = paraTable.dat
-ffForSimulation = forcefield.DOPC
-ffTemplate = forcefield.temp
+ffForSimulation = 
+ffTemplate = 
 
 
 [optimization]

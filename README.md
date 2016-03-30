@@ -30,7 +30,7 @@ brief explanation for options in each section.
 ```Ini
 [ simulation ]
 
-lmp = The LAMMPS executable called to run your simulation.
+lmp = "Test" for test function or the LAMMPS executable called to run your simulation.
 path = The path under which you run your simulation, relative to the 
                 current executing directory.
 inFileName = Your LAMMPS input file.

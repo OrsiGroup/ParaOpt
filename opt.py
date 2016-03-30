@@ -21,6 +21,8 @@ from src.parameter import ParameterTable
 from src.simulation import Simulation
 from src.property import Property
 
+import math
+import numpy as np
 
 # -------------------------------------------------------------------------- #
 
@@ -75,6 +77,11 @@ paraTable = ParameterTable(paraTableFile)
 ) = cfg.get_config('simulation')
 print("Simulation will be performed in folder: %s.\n" % path)
 
+if lmp != "test" and lmp != "simulation":
+  print("Wrong type of objective function!")
+  sys.exit(1)
+  
+
 
 (
     totalProperties,
@@ -110,19 +117,31 @@ def simulation_flow(parameters):
     """
     paraTable.update_table(parameters)
     print("\n#---- Step %d -------------#\n" % paraTable.len)
-    paraTable.write_datafile(
-        paraTable.current_parameter(),
-        dataFileOut=ffForSimulation,
-        dataFileTemp=ffTemplate,
-    )
+    
+  
+    if lmp=='test':
+      
+      y1=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
+      y2=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
+      y3=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
+      y4=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
+      propertyValues = np.array([y1,y2,y3,y4])
+    else:       
+      
+      paraTable.write_datafile(
+          paraTable.current_parameter(),
+          dataFileOut=ffForSimulation,
+          dataFileTemp=ffTemplate,
+      )
 
-    print("\nRunning Simulation...:")
-    simulation = Simulation(path, inFileName)
-    simulation.run(lmp)
-    # TODO add config "Nthread" to control mpirun thread number.
+      print("\nRunning Simulation...:")
+      simulation = Simulation(path, inFileName)
+      simulation.run(lmp)
+      # TODO add config "Nthread" to control mpirun thread number.
 
-    propertyValues = simulation.post_process(processScript)
-    # propertyValues= ['70.8745', '29.7267', '1005.19', '1.146']
+      propertyValues = simulation.post_process(processScript)
+      # propertyValues= ['70.8745', '29.7267', '1005.19', '1.146']
+    
 
     print("Saving Property Values...")
     if not len(propertyValues) == int(totalProperties):
@@ -132,7 +151,7 @@ def simulation_flow(parameters):
             )
         )
     for _, p in enumerate(properties):
-        p.value = propertyValues[_]
+        p.value = str(propertyValues[_])
         p.update_property_list()
 
     print("\nCalculating Target Value...:")
@@ -141,6 +160,7 @@ def simulation_flow(parameters):
 
     return targetValue
 
+# -------------------------------------------------------------------------- #
 
 print("\nOptimizing...:")
 optParaValues = scipy.optimize.minimize(
