@@ -13,6 +13,7 @@
 
 from __future__ import print_function
 
+import math
 import subprocess
 import sys
 import scipy.optimize
@@ -21,8 +22,6 @@ from src.parameter import ParameterTable
 from src.simulation import Simulation
 from src.property import Property
 
-import math
-import numpy as np
 
 # -------------------------------------------------------------------------- #
 
@@ -78,7 +77,6 @@ paraTable = ParameterTable(paraTableFile)
 ) = cfg.get_config('simulation')
 print("Simulation will be performed in folder: %s.\n" % path)
 
-
 (
     totalProperties,
     propertyNames,
@@ -115,29 +113,26 @@ def simulation_flow(parameters):
     print("\n#---- Step %d -------------#\n" % paraTable.len)
     
   
-    if mode=='test':
-      
-      y1=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
-      y2=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
-      y3=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
-      y4=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
-      propertyValues = np.array([y1,y2,y3,y4])
+    if lmp == "test":
+
+        propertyValues = [math.sin(parameters[0])**2 +
+                          math.cos(parameters[1])**2 +
+                          math.sin(parameters[2])**2] * len(properties)
     else:       
       
-      paraTable.write_datafile(
-          paraTable.current_parameter(),
-          dataFileOut=ffForSimulation,
-          dataFileTemp=ffTemplate,
-      )
+        paraTable.write_datafile(
+            paraTable.current_parameter(),
+            dataFileOut=ffForSimulation,
+            dataFileTemp=ffTemplate,
+        )
+  
+        print("\nRunning Simulation...:")
+        simulation = Simulation(path, inFileName)
+        simulation.run(lmp)
+        # TODO add config "Nthread" to control mpirun thread number.
+  
+        propertyValues = simulation.post_process(processScript)
 
-      print("\nRunning Simulation...:")
-      simulation = Simulation(path, inFileName)
-      simulation.run(execFile)
-      # TODO add config "Nthread" to control mpirun thread number.
-
-      propertyValues = simulation.post_process(processScript)
-      # propertyValues= ['70.8745', '29.7267', '1005.19', '1.146']
-    
 
     print("Saving Property Values...")
     if not len(propertyValues) == int(totalProperties):
@@ -148,6 +143,7 @@ def simulation_flow(parameters):
         )
     for _, p in enumerate(properties):
         p.value = str(propertyValues[_])
+        # Why string here?
         p.update_property_list()
 
     print("\nCalculating Target Value...:")
@@ -155,6 +151,7 @@ def simulation_flow(parameters):
     print("Current targeted value:", targetValue)
 
     return targetValue
+
 
 # -------------------------------------------------------------------------- #
 
