@@ -70,17 +70,13 @@ paraTable = ParameterTable(paraTableFile)
 
 
 (
-    lmp,
+    mode,
+    execFile,
     path,
     inFileName,
     processScript,
 ) = cfg.get_config('simulation')
 print("Simulation will be performed in folder: %s.\n" % path)
-
-if lmp != "test" and lmp != "simulation":
-  print("Wrong type of objective function!")
-  sys.exit(1)
-  
 
 
 (
@@ -119,7 +115,7 @@ def simulation_flow(parameters):
     print("\n#---- Step %d -------------#\n" % paraTable.len)
     
   
-    if lmp=='test':
+    if mode=='test':
       
       y1=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
       y2=math.sin(parameters[0])**2+math.cos(parameters[1])**2+math.sin(parameters[2])**2
@@ -136,7 +132,7 @@ def simulation_flow(parameters):
 
       print("\nRunning Simulation...:")
       simulation = Simulation(path, inFileName)
-      simulation.run(lmp)
+      simulation.run(execFile)
       # TODO add config "Nthread" to control mpirun thread number.
 
       propertyValues = simulation.post_process(processScript)

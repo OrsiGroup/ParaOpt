@@ -29,7 +29,9 @@ class Configuration(cp):
                        'ffforsimulation',
                        'fftemplate',
                        ],
-        'simulation': ['lmp',
+        'simulation': [
+                       'mode',
+                       'executable',
                        'path',
                        'infilename',
                        'processscript'
@@ -64,9 +66,17 @@ class Configuration(cp):
                 )
             )
         configs = [self.get(section, option) for option in optionsRequired]
+
         # TODO Unicode matters?
         # configs = map(str, configs)
-
+        
+        if section == 'simulation':
+          if configs[0] != "test" and configs[0] != "simulation":
+            print("Wrong type of objective function!")
+            exit(1)
+          else:
+            return configs
+  
         if section == 'properties':
             return self._get_config_for_property(configs)
         else:
