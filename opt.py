@@ -119,6 +119,8 @@ def simulation_flow(parameters):
         propertyValues = [math.sin(parameters[0])**2 +
                           math.cos(parameters[1])**2 +
                           math.sin(parameters[2])**2] * len(properties)
+        propertyValues = map(str, propertyValues)
+
     else:       
       
         paraTable.write_datafile(
@@ -142,9 +144,8 @@ def simulation_flow(parameters):
                 totalProperties, len(propertyValues)
             )
         )
-    for _, p in enumerate(properties):
-        p.value = str(propertyValues[_])
-        # Why string here?
+    for p, value in zip(properties, propertyValues):
+        p.value = value
         p.update_property_list()
 
     print("\nCalculating Target Value...:")
