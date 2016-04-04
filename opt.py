@@ -113,7 +113,8 @@ def simulation_flow(parameters):
     print("\n#---- Step %d -------------#\n" % paraTable.len)
     
   
-    if lmp == "test":
+    if mode == "test":
+    # TODO I feel this "if" not good, should be a better unit test in future.
 
         propertyValues = [math.sin(parameters[0])**2 +
                           math.cos(parameters[1])**2 +
