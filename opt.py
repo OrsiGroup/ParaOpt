@@ -5,7 +5,7 @@
 # Created:  2015/Jan/15
 # Purpose:  A generic routine to optimize CG-lipid parameters
 # Syntax:   opt.py configureFile
-# Options:  
+# Options:
 # Example:
 # Notes:    Based on "framework-6.py" from Michalis
 #
@@ -29,20 +29,15 @@ WELCOME_INFO = ("Nothing yet..."
                 "\n"
                 )
 
-
-# -------------------------------------------------------------------------- #
-
-if len(sys.argv) == 2:
-    confFile = sys.argv[1]
-elif len(sys.argv) == 1:
-    confFile = 'config.sample'
-else:
-    print("Syntax: opt.py configureFile")
-    sys.exit()
+def gate_keeping():
+    if len(sys.argv) == 2:
+        confFile = sys.argv[1]
+    else:
+        print("Syntax: opt.py configureFile")
+        sys.exit()
 
 
 # Preparations
-print(WELCOME_INFO)
 cfg = Configuration()
 cfg.read(confFile)
 
@@ -66,7 +61,6 @@ subprocess.call(
     shell=True
 )
 paraTable = ParameterTable(paraTableFile)
-
 
 (
     mode,
@@ -121,7 +115,7 @@ def simulation_flow(parameters):
                           math.sin(parameters[2])**2] * len(properties)
         propertyValues = [str(value) for value in propertyValues]
 
-    else:       
+    elif mode == "simulation":       
       
         paraTable.write_datafile(
             paraTable.current_parameter(),
@@ -168,3 +162,8 @@ optParaValues = scipy.optimize.minimize(
              },
     # callback=callbackF,
 )
+
+
+if __name__ == "__main__":
+    print(WELCOME_INFO)
+    gate_keeping()
