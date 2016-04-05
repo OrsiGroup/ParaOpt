@@ -69,16 +69,13 @@ paraTable = ParameterTable(paraTableFile)
 
 
 (
-    lmp,
+    mode,
+    execFile,
     path,
     inFileName,
     processScript,
 ) = cfg.get_config('simulation')
 print("Simulation will be performed in folder: %s.\n" % path)
-if lmp != "test" and lmp != "simulation":
-    print("Wrong type of objective function!")
-    sys.exit(1)
-# TODO put this checking into module.
 
 (
     totalProperties,
@@ -116,11 +113,14 @@ def simulation_flow(parameters):
     print("\n#---- Step %d -------------#\n" % paraTable.len)
     
   
-    if lmp == "test":
+    if mode == "test":
+    # TODO I feel this "if" not good, should be a better unit test in future.
 
         propertyValues = [math.sin(parameters[0])**2 +
                           math.cos(parameters[1])**2 +
                           math.sin(parameters[2])**2] * len(properties)
+        propertyValues = map(str, propertyValues)
+
     else:       
       
         paraTable.write_datafile(
@@ -144,9 +144,8 @@ def simulation_flow(parameters):
                 totalProperties, len(propertyValues)
             )
         )
-    for _, p in enumerate(properties):
-        p.value = str(propertyValues[_])
-        # Why string here?
+    for p, value in zip(properties, propertyValues):
+        p.value = value
         p.update_property_list()
 
     print("\nCalculating Target Value...:")

@@ -11,7 +11,8 @@
 ; to the "path" option. E.g., "processScript = ../process.sh" points to a 
 ; script file in the parent folder of the "path" directory. 
 
-lmp = test
+mode = test
+executable =
 path = 
 inFileName = 
 processScript =  
