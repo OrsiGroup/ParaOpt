@@ -119,7 +119,7 @@ def simulation_flow(parameters):
         propertyValues = [math.sin(parameters[0])**2 +
                           math.cos(parameters[1])**2 +
                           math.sin(parameters[2])**2] * len(properties)
-        propertyValues = map(str, propertyValues)
+        propertyValues = [str(value) for value in propertyValues]
 
     else:       
       
