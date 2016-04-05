@@ -131,7 +131,7 @@ def simulation_flow(parameters):
   
         print("\nRunning Simulation...:")
         simulation = Simulation(path, inFileName)
-        simulation.run(lmp)
+        simulation.run(execFile)
         # TODO add config "Nthread" to control mpirun thread number.
   
         propertyValues = simulation.post_process(processScript)
