@@ -72,7 +72,6 @@ paraTable = ParameterTable(paraTableFile)
     mode,
     execute,
     path,
-    execFile,
     processScript,
 ) = cfg.get_config('simulation')
 print("Simulation will be performed in folder: %s.\n" % path)
@@ -130,10 +129,9 @@ def simulation_flow(parameters):
         )
   
         print("\nRunning Simulation...:")
-        simulation = Simulation(path, execFile)
+        simulation = Simulation(path)
         simulation.run(execute)
         # TODO add config "Nthread" to control mpirun thread number.
-  
         propertyValues = simulation.post_process(processScript)
 
 

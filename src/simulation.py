@@ -10,31 +10,32 @@
 from __future__ import print_function
 
 import fileinput
-import os 
+import os
 import subprocess
 
 
 # -------------------------------------------------------------------------- #
 
 class Simulation(object):
-    def __init__(self, simuPath, simuInFile):
+    def __init__(self, simuPath):
         self.path = os.path.abspath(simuPath)
-        self.infile = simuInFile
 
     def run(self, inCommand):
-        """ Call the simulator to run your simulation.
+        """ Execute the input command (inCommand).
 
         inCommand: command to run the simulation;
 
         type_inCommand: str
         rtype: None
         """
-        preSimDir=os.getcwd()
+        preSimDir = os.getcwd()
         os.chdir(self.path)
-        exeCommand=inCommand+' '+self.infile+' > log.screen'
-        subprocess.check_call(exeCommand,shell=True)
+        exeCommand = inCommand + ' > log.screen'
+        subprocess.check_call(exeCommand, shell=True)
+        # TODO 1) Handle the stdout in subprocess if possible (rather than 
+        #         using '> log');
+        #      2) Be careful about 'shell-True'. 
         os.chdir(preSimDir)
-        
 
     def post_process(self, scriptFileName):
         # TODO why not return list??

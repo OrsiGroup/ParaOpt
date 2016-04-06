@@ -33,7 +33,6 @@ class Configuration(cp):
                        'mode',
                        'execute',
                        'path',
-                       'infilename',
                        'processscript'
                        ],
     }

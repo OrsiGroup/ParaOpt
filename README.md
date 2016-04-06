@@ -31,10 +31,9 @@ brief explanation for options in each section.
 [ simulation ]
 
 mode = "test" for test function or "simulation" to run optimization
-execute = Bash command that will be used to run your simulation. E.g. mpirun -np 4 lammps -in 
+execute = Bash command that will be used to run your simulation. E.g. "mpirun -np 4 lammps -in in.lmp"
 path = The path under which you run your simulation, relative to the 
                 current executing directory.
-inFileName = Your simulation file to be used with the execute command. 
 processScript = A script to post-process your simulation output to obtain 
                 targeted property values.
 ```
