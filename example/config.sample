@@ -12,7 +12,7 @@
 ; script file in the parent folder of the "path" directory. 
 
 mode = simulation
-executable = lammps  
+execute = lammps -in 
 path = ./simulation
 inFileName = in.2xlipid
 processScript = preProcess.sh 

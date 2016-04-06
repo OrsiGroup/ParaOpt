@@ -10,7 +10,7 @@
 from __future__ import print_function
 
 import fileinput
-import os.path
+import os 
 import subprocess
 
 
@@ -21,23 +21,20 @@ class Simulation(object):
         self.path = os.path.abspath(simuPath)
         self.infile = simuInFile
 
-    def run(self, lmpExe, thread=2):
+    def run(self, inCommand):
         """ Call the simulator to run your simulation.
 
-        lmpExe: your local LAMMPS executable;
-        thread: mpirun thread (default: 2).
+        inCommand: command to run the simulation;
 
-        type_lmpExe: str
-        type_thread: int
+        type_inCommand: str
         rtype: None
         """
-        subprocess.check_call(
-            'cd %s && mpirun -np %d %s < %s > log.screen' % (
-                self.path, thread, lmpExe, self.infile
-            ),
-            shell=True,
-            # TODO Dangerous!
-        )
+        preSimDir=os.getcwd()
+        os.chdir(self.path)
+        exeCommand=inCommand+' '+self.infile+' > log.screen'
+        subprocess.check_call(exeCommand,shell=True)
+        os.chdir(preSimDir)
+        
 
     def post_process(self, scriptFileName):
         # TODO why not return list??
