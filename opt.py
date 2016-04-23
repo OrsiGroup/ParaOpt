@@ -51,6 +51,7 @@ cfg.read(confFile)
 ) = cfg.get_config('optimization')
 print("The \"%s\" optimizing method will be used.\n" % optMethod)
 
+'''
 (
     initParaTableFile,
     paraTableFile,
@@ -66,15 +67,23 @@ subprocess.call(
     shell=True
 )
 paraTable = ParameterTable(paraTableFile)
+'''
 
+print('Simulations reading parameters works. Fix the parameters section and make it the same as properties.')
+exit(1)
 
 (
     mode,
     execute,
     path,
     processScript,
+    paraTableFile,
+    ffForSimulation,
+    ffTemplate,
 ) = cfg.get_config('simulation')
 print("Simulation will be performed in folder: %s.\n" % path)
+
+
 
 (
     totalProperties,

@@ -24,16 +24,16 @@ class Configuration(cp):
                          ],
         'properties': ['totalproperties',
                        ],
-        'parameters': ['initparatablefile',
-                       'paratablefile',
-                       'ffforsimulation',
-                       'fftemplate',
+        'parameters': ['totalparameters',
                        ],
         'simulation': [
                        'mode',
                        'execute',
                        'path',
-                       'processscript'
+                       'processscript',
+                       'paratablefile',
+                       'ffforsimulation',
+                       'fftemplate'
                        ],
     }
 

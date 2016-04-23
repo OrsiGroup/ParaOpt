@@ -14,8 +14,11 @@
 mode = test
 execute =
 path = 
+inFileName = 
 processScript =  
-
+paraTableFile = paraTable.dat
+ffForSimulation = test1
+ffTemplate = test2
 
 [properties]
 
@@ -47,12 +50,22 @@ property4Ref = 2.3
 
 ; All (file-related) options in the "parameters" section is declared relative 
 ; to the directory you execute the programme.
-  
-initParaTableFile = initParaTable.dat
-paraTableFile = paraTable.dat
-ffForSimulation = 
-ffTemplate = 
 
+totalParameters = 3
+
+; 1.
+parameter1Name = sigma
+parameter1Ref = 8.0
+
+; 2.
+parameter2Name = epsilon
+parameter2Ref = 0.40
+
+; 3. 
+parameter3Name = mu
+parameter3Ref = 2.0
+
+  
 
 [optimization]
 
