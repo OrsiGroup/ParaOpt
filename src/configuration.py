@@ -31,9 +31,8 @@ class Configuration(cp):
                        ],
         'simulation': [
                        'mode',
-                       'executable',
+                       'execute',
                        'path',
-                       'infilename',
                        'processscript'
                        ],
     }

@@ -12,9 +12,8 @@
 ; script file in the parent folder of the "path" directory. 
 
 mode = test
-executable =
+execute =
 path = 
-inFileName = 
 processScript =  
 
 
