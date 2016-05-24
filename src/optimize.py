@@ -1,5 +1,15 @@
 #__docformat__ = "restructuredtext en"
 # ******NOTICE***************
+
+# Modified "Nelder-Mead" minimization by Wei Ding
+#
+#  Copied from SCIPY/PATH/optimize/optimize.py
+#
+#  2016/May/23
+#  Instead of only receiving one point (a list) as input to base an initial
+#  simplex around it, a np.array containing N + 1 points as an user-predefined
+#  simplex is passed in as the input.
+
 # optimize.py module by Travis E. Oliphant
 #
 # You may copy and use this module as you see fit with no
@@ -32,8 +42,8 @@ import numpy
 from scipy.lib.six import callable
 from numpy import (atleast_1d, eye, mgrid, argmin, zeros, shape, squeeze,
                    vectorize, asarray, sqrt, Inf, asfarray, isinf)
-from .linesearch import (line_search_BFGS, line_search_wolfe1,
-                         line_search_wolfe2, line_search_wolfe2 as line_search)
+#from .linesearch import (line_search_BFGS, line_search_wolfe1,
+#                         line_search_wolfe2, line_search_wolfe2 as line_search)
 
 
 # standard status messages of optimizers
@@ -411,11 +421,24 @@ def _minimize_neldermead(func, x0, args=(), callback=None,
     retall = return_all
 
     fcalls, func = wrap_function(func, args)
-    x0 = asfarray(x0).flatten()
-    N = len(x0)
-    rank = len(x0.shape)
-    if not -1 < rank < 2:
-        raise ValueError("Initial guess must be a scalar or rank-1 sequence.")
+
+    # Modified for recieving an user-defined simplex as input, instead of 1
+    # base point.
+    #
+    # Wei Ding (2016/May/24)
+    #
+    # Inputs: x0: a np.array instead of a list;
+    #
+    # Outputs: sim: np.array containing simplex points ((N + 1) * N)
+    #          fsim: np.array containing func values for simplex points (N + 1)
+    #          N: dimension of points
+    #          rank: 1
+    #          maxiter, maxfun, rho, chi, psi, sigma, one2np1: unchanged
+    sim = x0
+    if sim.shape[0] != sim.shape[1] + 1:
+        raise ValueError("Points in input array don't form a correct simplex.")
+    N = sim.shape[1]
+    rank = 1
     if maxiter is None:
         maxiter = N * 200
     if maxfun is None:
@@ -427,27 +450,50 @@ def _minimize_neldermead(func, x0, args=(), callback=None,
     sigma = 0.5
     one2np1 = list(range(1, N + 1))
 
-    if rank == 0:
-        sim = numpy.zeros((N + 1,), dtype=x0.dtype)
-    else:
-        sim = numpy.zeros((N + 1, N), dtype=x0.dtype)
     fsim = numpy.zeros((N + 1,), float)
-    sim[0] = x0
     if retall:
         allvecs = [sim[0]]
-    fsim[0] = func(x0)
-    nonzdelt = 0.05
-    zdelt = 0.00025
-    for k in range(0, N):
-        y = numpy.array(x0, copy=True)
-        if y[k] != 0:
-            y[k] = (1 + nonzdelt)*y[k]
-        else:
-            y[k] = zdelt
-
-        sim[k + 1] = y
-        f = func(y)
-        fsim[k + 1] = f
+    for k in range(0, N + 1):
+        fsim[k] = func(sim[k])
+#
+#    x0 = asfarray(x0).flatten()
+#    N = len(x0)
+#    rank = len(x0.shape)
+#    if not -1 < rank < 2:
+#        raise ValueError("Initial guess must be a scalar or rank-1 sequence.")
+#    if maxiter is None:
+#        maxiter = N * 200
+#    if maxfun is None:
+#        maxfun = N * 200
+#
+#    rho = 1
+#    chi = 2
+#    psi = 0.5
+#    sigma = 0.5
+#    one2np1 = list(range(1, N + 1))
+#
+#    if rank == 0:
+#        sim = numpy.zeros((N + 1,), dtype=x0.dtype)
+#    else:
+#        sim = numpy.zeros((N + 1, N), dtype=x0.dtype)
+#    fsim = numpy.zeros((N + 1,), float)
+#    sim[0] = x0
+#    if retall:
+#        allvecs = [sim[0]]
+#    fsim[0] = func(x0)
+#    nonzdelt = 0.05
+#    zdelt = 0.00025
+#    for k in range(0, N):
+#        y = numpy.array(x0, copy=True)
+#        if y[k] != 0:
+#            y[k] = (1 + nonzdelt)*y[k]
+#        else:
+#            y[k] = zdelt
+#
+#        sim[k + 1] = y
+#        f = func(y)
+#        fsim[k + 1] = f
+#
 
     ind = numpy.argsort(fsim)
     fsim = numpy.take(fsim, ind, 0)

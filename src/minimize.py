@@ -23,15 +23,15 @@ from .optimize import (_minimize_neldermead, _minimize_powell, _minimize_cg,
                       _minimize_bfgs, _minimize_newtoncg,
                       _minimize_scalar_brent, _minimize_scalar_bounded,
                       _minimize_scalar_golden, MemoizeJac)
-from ._trustregion_dogleg import _minimize_dogleg
-from ._trustregion_ncg import _minimize_trust_ncg
-from .anneal import _minimize_anneal
-
+#from ._trustregion_dogleg import _minimize_dogleg
+#from ._trustregion_ncg import _minimize_trust_ncg
+#from .anneal import _minimize_anneal
+#
 # contrained minimization
-from .lbfgsb import _minimize_lbfgsb
-from .tnc import _minimize_tnc
-from .cobyla import _minimize_cobyla
-from .slsqp import _minimize_slsqp
+#from .lbfgsb import _minimize_lbfgsb
+#from .tnc import _minimize_tnc
+#from .cobyla import _minimize_cobyla
+#from .slsqp import _minimize_slsqp
 
 
 def minimize(fun, x0, args=(), method='BFGS', jac=None, hess=None,
