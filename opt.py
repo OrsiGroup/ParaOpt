@@ -5,7 +5,7 @@
 # Created:  2015/Jan/15
 # Purpose:  A generic routine to optimize CG-lipid parameters
 # Syntax:   opt.py configureFile
-# Options:  
+# Options:
 # Example:
 # Notes:    Based on "framework-6.py" from Michalis
 #
@@ -16,19 +16,19 @@ from __future__ import print_function
 import math
 import subprocess
 import sys
-import scipy.optimize
+# import scipy.optimize
+from src.minimize import minimize
+import numpy as np
 from src.configuration import Configuration
 from src.parameter import ParameterTable
 from src.simulation import Simulation
 from src.property import Property
-
 
 # -------------------------------------------------------------------------- #
 
 WELCOME_INFO = ("Nothing yet..."
                 "\n"
                 )
-
 
 # -------------------------------------------------------------------------- #
 
@@ -39,7 +39,6 @@ elif len(sys.argv) == 1:
 else:
     print("Syntax: opt.py configureFile")
     sys.exit()
-
 
 # Preparations
 print(WELCOME_INFO)
@@ -67,12 +66,10 @@ subprocess.call(
 )
 paraTable = ParameterTable(paraTableFile)
 
-
 (
     mode,
-    execFile,
+    execute,
     path,
-    inFileName,
     processScript,
 ) = cfg.get_config('simulation')
 print("Simulation will be performed in folder: %s.\n" % path)
@@ -99,6 +96,20 @@ for i, name in enumerate(propertyNames):
     properties[i].special = propertySpecials[i]
     # TODO @setter here?
 
+if mode == 'test' or 'simulation':
+    nDim = len(paraValuesInitial)
+    paraArrayInitial = np.empty((nDim + 1, nDim))
+    paraArrayInitial[0] = paraValuesInitial
+    nonzdelt = 1.05
+    zdelt = 0.00025
+    for k in range(0, nDim):
+        y = np.array(paraValuesInitial, copy=True)
+        if y[k] != 0:
+            y[k] *= nonzdelt
+        else:
+            y[k] = zdelt
+        paraArrayInitial[k + 1] = y
+
 
 # -------------------------------------------------------------------------- #
 
@@ -111,31 +122,27 @@ def simulation_flow(parameters):
     """
     paraTable.update_table(parameters)
     print("\n#---- Step %d -------------#\n" % paraTable.len)
-    
-  
-    if mode == "test":
-    # TODO I feel this "if" not good, should be a better unit test in future.
 
-        propertyValues = [math.sin(parameters[0])**2 +
-                          math.cos(parameters[1])**2 +
-                          math.sin(parameters[2])**2] * len(properties)
+    # TODO I feel this "if" not good, should be a better unit test in future.
+    if mode == "test":
+        propertyValues = [math.sin(parameters[0]) ** 2 +
+                          math.cos(parameters[1]) ** 2 +
+                          math.sin(parameters[2]) ** 2] * len(properties)
         propertyValues = [str(value) for value in propertyValues]
 
-    else:       
-      
+    else:
+
         paraTable.write_datafile(
             paraTable.current_parameter(),
             dataFileOut=ffForSimulation,
             dataFileTemp=ffTemplate,
         )
-  
-        print("\nRunning Simulation...:")
-        simulation = Simulation(path, inFileName)
-        simulation.run(execFile)
-        # TODO add config "Nthread" to control mpirun thread number.
-  
-        propertyValues = simulation.post_process(processScript)
 
+        print("\nRunning Simulation...:")
+        simulation = Simulation(path)
+        simulation.run(execute)
+        # TODO add config "Nthread" to control mpirun thread number.
+        propertyValues = simulation.post_process(processScript)
 
     print("Saving Property Values...")
     if not len(propertyValues) == int(totalProperties):
@@ -158,9 +165,9 @@ def simulation_flow(parameters):
 # -------------------------------------------------------------------------- #
 
 print("\nOptimizing...:")
-optParaValues = scipy.optimize.minimize(
+optParaValues = minimize(
     simulation_flow,
-    paraValuesInitial,
+    paraArrayInitial,
     method=optMethod,
     options={'disp': True,
              'maxiter': 100,
