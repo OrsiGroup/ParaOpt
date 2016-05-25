@@ -15,8 +15,12 @@ import re
 # -------------------------------------------------------------------------- #
 
 class ParameterTable(object):
-    def __init__(self, paraTable):
+    def __init__(self, paraTable,
+                 datafile=None, datatemp=None):
         self.table = paraTable
+        self.datafile = datafile
+        self.datatemp = datatemp
+        #TODO 'f' below not closed after use?
         f = open(self.table, 'rt')
         nameLine = f.readline()
         if nameLine[0:2] == '# ':
@@ -57,7 +61,9 @@ class ParameterTable(object):
                 )
             )
 
-    def write_datafile(self, paraList, dataFileOut, dataFileTemp):
+    def write_datafile(self, paraList,
+                       dataFileOut=None,
+                       dataFileTemp=None):
         """ Replace every @para-name in the prepared datafile template (
         dataFileTemp) with the corresponding para-value from paraList. Output
         file (dataFileOut) is used for running your simulation.
@@ -67,6 +73,14 @@ class ParameterTable(object):
         type_dataFileTemp: str
         rtype: None
         """
+        if dataFileOut == None:
+            dataFileOut = self.datafile
+        if dataFileOut == None:
+            raise ValueError("No data file to write.")
+        if dataFileTemp == None:
+            dataFileTemp = self.datatemp
+        if dataFileTemp == None:
+            raise ValueError("Data file template not provided.")
 
         def update_line(line, stringList, valueList):
             """ Update a line (line) in the datafile template, with both the

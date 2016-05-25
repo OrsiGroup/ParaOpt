@@ -17,8 +17,9 @@ import subprocess
 # -------------------------------------------------------------------------- #
 
 class Simulation(object):
-    def __init__(self, simuPath):
+    def __init__(self, simuPath, postScript=None):
         self.path = os.path.abspath(simuPath)
+        self.script = postScript
 
     def run(self, inCommand):
         """ Execute the input command (inCommand).
@@ -37,19 +38,25 @@ class Simulation(object):
         #      2) Be careful about 'shell-True'. 
         os.chdir(preSimDir)
 
-    def post_process(self, scriptFileName):
+    def post_process(self, scriptFileName=None):
         # TODO why not return list??
         """ Post-process the simulation data by calling your script file.
         Return all properties' value as a list.
 
-        scriptFileName: the post-processing script. It should process the
-            data produced by the simulation, and save all targeted property
-            values in a single line file named "res.postprocess" like this:
+        scriptFileName: the post-processing script ('self.script' by default).
+            It should process the data produced by the simulation, and save
+            all targeted property values in a single line file, named as
+            "res.postprocess" like this:
                 "Q1 Q2 Q3 Q4 ...".
 
         type_scriptFileName: str
         rtype: str list
         """
+        if not scriptFileName:
+            scriptFileName = self.script
+        if not scriptFileName:
+            raise ValueError("Post-process file not provided.")
+
         print("Results being processed by: \"%s\" " % scriptFileName)
         subprocess.check_call(
             'cd %s && ./%s' % (self.path, scriptFileName),
