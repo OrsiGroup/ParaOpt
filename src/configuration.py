@@ -3,7 +3,7 @@
 #
 # Created:  2015/Jan/25
 # Purpose:  Read and process setting from a configuration file. 
-# Notes:    
+# Notes:
 #
 # -------------------------------------------------------------------------- #
 
@@ -68,13 +68,17 @@ class Configuration(cp):
 
         # TODO Unicode matters?
         # configs = map(str, configs)
-        
+
         if section == 'simulation':
             if configs[0] != "test" and configs[0] != "simulation":
-                raise ValueError("Wrong type of objective function!")
+                raise ValueError("Wrong type of objective function: %s!"
+                                 % configs[0]
+                )
             return configs
 
         elif section == 'properties':
+            if int(configs[0]) == 0:
+                raise ValueError("Total number of properties should > 0.")
             return self._get_config_for_property(configs)
 
         else:
