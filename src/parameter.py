@@ -15,17 +15,20 @@ import re
 # -------------------------------------------------------------------------- #
 
 class ParameterTable(object):
-    def __init__(self, paraTable):
+    def __init__(self, paraTable,
+                 datafile=None, datatemp=None):
         self.table = paraTable
+        #TODO 'f' below not closed after use?
         f = open(self.table, 'rt')
         nameLine = f.readline()
-        if nameLine[0:2] == '# ':
-            self.names = nameLine[2:-1].split()
-        else:
+        if nameLine[0:2] != '# ' or nameLine[-1] != '\n':
             raise ValueError('Headline in %s missing.' % paraTable)
+        self.names = nameLine[2:-1].split()
         self.dimension = len(self.names)
         self.paraLines = f.readlines()
         self.len = len(self.paraLines)
+        self.datafile = datafile
+        self.datatemp = datatemp
 
     def current_parameter(self):
         """ Get the current parameters (the last line of para-table).
@@ -57,7 +60,9 @@ class ParameterTable(object):
                 )
             )
 
-    def write_datafile(self, paraList, dataFileOut, dataFileTemp):
+    def write_datafile(self, paraList,
+                       dataFileOut=None,
+                       dataFileTemp=None):
         """ Replace every @para-name in the prepared datafile template (
         dataFileTemp) with the corresponding para-value from paraList. Output
         file (dataFileOut) is used for running your simulation.
@@ -67,6 +72,14 @@ class ParameterTable(object):
         type_dataFileTemp: str
         rtype: None
         """
+        if dataFileOut == None:
+            dataFileOut = self.datafile
+        if dataFileOut == None:
+            raise ValueError("No data file to write.")
+        if dataFileTemp == None:
+            dataFileTemp = self.datatemp
+        if dataFileTemp == None:
+            raise ValueError("Data file template not provided.")
 
         def update_line(line, stringList, valueList):
             """ Update a line (line) in the datafile template, with both the
@@ -94,9 +107,9 @@ class ParameterTable(object):
                     index = stringList.index(paraName[1:])
                     line = line.replace(paraName, valueList[index])
                 except ValueError:
-                    pass
                 # omit strings starting with "@" but not found in stringSet,
                 # e.g. something in the comments.
+                    pass
             return line
 
         print("Parameters written to: \"%s\" " % dataFileOut)

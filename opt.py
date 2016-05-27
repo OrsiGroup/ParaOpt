@@ -9,7 +9,7 @@
 # Example:
 # Notes:    Based on "framework-6.py" from Michalis
 #
-#  ------------------------------------------------------------------------- #
+# -------------------------------------------------------------------------- #
 
 from __future__ import print_function
 
@@ -24,79 +24,53 @@ from src.parameter import ParameterTable
 from src.simulation import Simulation
 from src.property import Property
 
-# -------------------------------------------------------------------------- #
-
-WELCOME_INFO = ("Nothing yet..."
-                "\n"
-                )
 
 # -------------------------------------------------------------------------- #
 
-if len(sys.argv) == 2:
-    confFile = sys.argv[1]
-elif len(sys.argv) == 1:
-    confFile = 'config.sample'
-else:
-    print("Syntax: opt.py configureFile")
-    sys.exit()
+def welcome():
+    print("Nothing yet...")
+    print("\n")
 
-# Preparations
-print(WELCOME_INFO)
-cfg = Configuration()
-cfg.read(confFile)
+def get_cmd_arg():
+    """ Get the command line arguments and pass it to main programs.
 
-(
-    optMethod,
-) = cfg.get_config('optimization')
-print("The \"%s\" optimizing method will be used.\n" % optMethod)
+    r_type: str
+    """
+    if len(sys.argv) == 2:
+        return sys.argv[1]
+    else:
+        print("Syntax: opt.py configureFile")
+        sys.exit()
 
-(
-    initParaTableFile,
-    paraTableFile,
-    ffForSimulation,
-    ffTemplate,
-) = cfg.get_config('parameters')
-print("Fetch initial parameters from \"%s\"." % initParaTableFile)
-paraTableInitial = ParameterTable(initParaTableFile)
-paraValuesInitial = paraTableInitial.current_parameter()
-print("Optimized parameters will be saved in \"%s\".\n" % paraTableFile)
-subprocess.call(
-    "head -1 %s > %s" % (initParaTableFile, paraTableFile),
-    shell=True
-)
-paraTable = ParameterTable(paraTableFile)
+def print_info(argDict):
+    """ Print on screen the table of configs read from the input file.
+    """
+    l = 20
+    print("%s |%s" %("ATTRIBUTE".center(l), "VALUE".center(l)))
+    print("-" * 2 * (l + 1))
+    for key in sorted(argDict):
+        print("%s |%s"
+              %(key.ljust(l), argDict[key].rjust(l)))
+    print("-" * 2 * (l + 1), "\n")
 
-(
-    mode,
-    execute,
-    path,
-    processScript,
-) = cfg.get_config('simulation')
-print("Simulation will be performed in folder: %s.\n" % path)
+# -------------------------------------------------------------------------- #
 
-(
-    totalProperties,
-    propertyNames,
-    propertyRefs,
-    propertySpecials,
-) = cfg.get_config('properties')
-if not int(totalProperties) == len(propertyNames):
-    raise ValueError(
-        '%s properties indicated, but %d given.' % (
-            totalProperties, len(propertyNames)
-        )
+def initialize_parameters(inTable, outTable, ffFile=None, ffTemp=None):
+    """ Initialize input/output PT (parameter table) objects and read input 
+    parameters.
+ 
+    type_inTable: str
+    type_outTable: str
+    rtype: (float list, PT object)
+    """
+    paraTableInitial = ParameterTable(inTable)
+    paraValuesInitial = paraTableInitial.current_parameter()
+    subprocess.call(
+        "head -1 %s > %s" % (inTable, outTable),
+        shell=True,
     )
-properties = [''] * len(propertyNames)
-for i, name in enumerate(propertyNames):
-    if not name:
-        name = "q_" + str(i + 1)
-        print("Property%d name not set, Reset as \"%s\"." % (i + 1, name))
-    properties[i] = Property(name)
-    properties[i].reference = propertyRefs[i]
-    properties[i].special = propertySpecials[i]
-    # TODO @setter here?
-
-if mode == 'test' or 'simulation':
+    paraTable = ParameterTable(outTable, datafile=ffFile, datatemp=ffTemp)
+    
     nDim = len(paraValuesInitial)
     paraArrayInitial = np.empty((nDim + 1, nDim))
     paraArrayInitial[0] = paraValuesInitial
@@ -109,69 +83,170 @@ if mode == 'test' or 'simulation':
         else:
             y[k] = zdelt
         paraArrayInitial[k + 1] = y
+    return paraArrayInitial, paraTable
+    
+def initialize_properties(nameList, refList, specList, n):
+    """ Initialize targeted property objects, given the list of input property
+    names (nameList), references (refList), specials(specList), and the total
+    number of total properties (n).
+    
+    type_nameList: str list
+    type_n: int
+    rtype: property object list
+    """
+    if not len(nameList) == n:
+        raise ValueError(
+            '%s properties indicated, but %d given.' % (n, len(nameList))
+        )
+    properties = [''] * n
+    for i, name in enumerate(nameList):
+        if not name:
+            name = "q_" + str(i + 1)
+            print("Property %d name not set, Reset as \"%s\"." % (i + 1, name))
+        properties[i] = Property(name)
+        properties[i].reference = refList[i]
+        properties[i].special = specList[i]
+    return properties
 
 
-# -------------------------------------------------------------------------- #
-
-def simulation_flow(parameters):
-    """ The sub-routine to be optimized. Take in a set of parameters, and
-    return a targeted function value.
-
-    type_parameters: float list
+def test_flow(x, xt, y):
+    """ Testing sub-routine.
+    x: parameters
+    xtable: the table to be written every step.
+    y: targeted properties
+    
+    type_x: float list
+    type_xtable: parameterTable object
+    type_y: property object list
     rtype: float
     """
-    paraTable.update_table(parameters)
-    print("\n#---- Step %d -------------#\n" % paraTable.len)
-
-    # TODO I feel this "if" not good, should be a better unit test in future.
-    if mode == "test":
-        propertyValues = [math.sin(parameters[0]) ** 2 +
-                          math.cos(parameters[1]) ** 2 +
-                          math.sin(parameters[2]) ** 2] * len(properties)
-        propertyValues = [str(value) for value in propertyValues]
-
-    else:
-
-        paraTable.write_datafile(
-            paraTable.current_parameter(),
-            dataFileOut=ffForSimulation,
-            dataFileTemp=ffTemplate,
-        )
-
-        print("\nRunning Simulation...:")
-        simulation = Simulation(path)
-        simulation.run(execute)
-        # TODO add config "Nthread" to control mpirun thread number.
-        propertyValues = simulation.post_process(processScript)
+    print("\n#---- Step %d -------------#\n" % xt.len)
+    xt.update_table(x)
+    
+    yTargetedValues = [math.sin(x[0])**2 +
+                       math.cos(x[1])**2 +
+                       math.sin(x[2])**2] * len(y)
+    yTargetedValues = [str(value) for value in yTargetedValues]
 
     print("Saving Property Values...")
-    if not len(propertyValues) == int(totalProperties):
-        raise ValueError(
-            '%s target properties needed, but %d produced by simulation.' % (
-                totalProperties, len(propertyValues)
-            )
-        )
-    for p, value in zip(properties, propertyValues):
-        p.value = value
-        p.update_property_list()
+    for yn, value in zip(y, yTargetedValues):
+        yn.value = value
+        yn.update_property_list()
 
     print("\nCalculating Target Value...:")
-    targetValue = sum([p.target_function() for p in properties])
+    targetValue = sum([yn.target_function() for yn in y])
     print("Current targeted value:", targetValue)
 
     return targetValue
 
+def simulation_flow(x, xtable, sim, y):
+    """ The sub-routine to be optimized. 
+    x: parameters
+    xtable: the parameter table to be written every step
+    sim: the simulation to be run
+    y: targeted properties
+    
+    type_x: float list
+    type_xtable: parameterTable object
+    type_sim: simulation object
+    type_y: property object list
+    rtype: float
+    """
+    print("\n#---- Step %d -------------#\n" % xtable.len)
+    xtable.update_table(x)
+    xtable.write_datafile(xtable.current_parameter())
 
-# -------------------------------------------------------------------------- #
+    print("\nRunning Simulation...:")
+    sim.run(execute)
+    propertyResults = sim.post_process()
 
-print("\nOptimizing...:")
-optParaValues = minimize(
-    simulation_flow,
-    paraArrayInitial,
-    method=optMethod,
-    options={'disp': True,
-             'maxiter': 100,
-             'ftol': 0.0001,
-             },
-    # callback=callbackF,
-)
+    print("Saving Property Values...")
+    if not len(propertyResults) == len(y):
+        raise ValueError(
+            '%s target properties needed, but %d produced by simulation.' % (
+                len(y), len(propertyResults)
+            )
+        )
+    for yn, value in zip(y, propertyResults):
+        yn.value = value
+        yn.update_property_list()
+
+    print("\nCalculating Target Value...:")
+    targetValue = sum([yn.target_function() for yn in y])
+    print("Current targeted value:", targetValue)
+
+    return targetValue
+    
+if __name__ == "__main__":
+
+    welcome()
+
+    confFile = get_cmd_arg()
+    cfg = Configuration()
+    cfg.read(confFile)
+    #TODO no need a class.
+    
+    (
+        optMethod,
+    ) = cfg.get_config("optimization")
+    (
+        initParaTableFile,
+        paraTableFile,
+        ffForSimulation,
+        ffTemplate,
+    ) = cfg.get_config('parameters')
+    (
+        mode,
+        execute,
+        path,
+        processScript,
+    ) = cfg.get_config('simulation')
+    (
+        totalProperties,
+        propertyNames,
+        propertyRefs,
+        propertySpecials,
+    ) = cfg.get_config('properties')
+
+    INFO_DICT = {
+        "Optimization Method": optMethod,
+        "Parameters Input"   : initParaTableFile,
+        "Parameters Output"  : paraTableFile,
+        "Simulation Folder"  : path,
+        "Post-Process"       : processScript,
+    }
+    print_info(INFO_DICT)
+
+    (
+        paraArrayInitial, 
+        paraTable,
+    ) = initialize_parameters(initParaTableFile, paraTableFile,
+                             ffFile=ffForSimulation, ffTemp=ffTemplate)
+    properties = initialize_properties(propertyNames, propertyRefs,
+                                       propertySpecials, int(totalProperties))
+    simulation = Simulation(path, processScript)
+    
+    # ----------------------------------------------------------------------- #
+    def test_flow_with_1_arg(p):
+        return test_flow(p, paraTable, properties)
+    
+    def simulation_with_1_arg(p):
+        return simulation_flow(p, paraTable, simulation, properties)
+        
+    #TODO wrap this part as a function and give 'func' as input?
+    print("\nOptimizing...:")
+    if mode == "test":
+        func = test_flow_with_1_arg
+    elif mode == "simulation":
+        func = simulation_with_1_arg
+
+    optParaValues = minimize(
+        func,
+        paraArrayInitial,
+        method=optMethod,
+        options={'disp': True,
+                 'maxiter': 100,
+                 'ftol': 0.0001,
+        },
+        # callback=callbackF,
+    )

@@ -1,6 +1,6 @@
 # Non-critical folders
 example/
-test*/
+test??*/
 
 # Gedit temp files
 *~
