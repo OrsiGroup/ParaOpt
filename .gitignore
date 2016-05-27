@@ -1,3 +1,7 @@
+# Non-critical folders
+example/
+test*/
+
 # Gedit temp files
 *~
 
