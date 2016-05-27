@@ -2,8 +2,10 @@ try:
     import unittest2 as unittest
 except ImportError:
     import unittest
-
-import cStringIO
+try:
+    import cStringIO
+except ImportError:
+    import io as cStringIO
 import os
 import sys
 sys.path.append('..')
@@ -20,7 +22,10 @@ class TestOpt(unittest.TestCase):
         sys.stdout = cStringIO.StringIO()
 
     def test_initialize_parameters(self):
-        self.assertRaises(IndexError, _opt.initialize_parameters, self.tempf, "temp.test_init")
+        self.assertRaises(IndexError,
+                          _opt.initialize_parameters,
+                          self.tempf, "temp.test_init"
+        )
 
         with open(self.tempf, "at") as f:
             f.write("1 2")
@@ -41,7 +46,10 @@ class TestOpt(unittest.TestCase):
         spec = ['', 'foo']
         #TODO no error here?
         n = 1
-        self.assertRaises(ValueError, _opt.initialize_properties, name, ref, spec, n)
+        self.assertRaises(ValueError,
+                          _opt.initialize_properties,
+                          name, ref, spec, n
+        )
 
         n += 1
         r = _opt.initialize_properties(name, ref, spec, n)
@@ -50,6 +58,7 @@ class TestOpt(unittest.TestCase):
         self.assertEqual(r[1].name, 'q_2')
 
     def test_simultion_flow(self):
+        #TODO nothing here yet.
         self.assertNotEqual(1, 2)
 
     def tearDown(self):

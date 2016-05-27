@@ -13,6 +13,11 @@ sys.path.append('..')
 from src.configuration import Configuration
 
 class TestConfiguration(unittest.TestCase):
+    """Tests for the 'Configuration' module.
+    Test cases are numberred to be run in order, so that the temp file
+    ('self.tempf') can be re-used, but each case is independent if rewrote
+    "self.string2" into "self.tempf" every execution.
+    """
 
     def setUp(self):
         self.stdout = sys.stdout
